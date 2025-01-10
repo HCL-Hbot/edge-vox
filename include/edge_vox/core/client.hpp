@@ -29,6 +29,10 @@ public:
     using StatusCallback = std::function<void(const std::string& status)>;
     void set_status_callback(StatusCallback callback);
 
+    // Event handlers
+    using WakeWordCallback = std::function<void()>;
+    void set_wake_word_callback(WakeWordCallback callback);
+
 private:
     class Impl;
     std::unique_ptr<Impl> pimpl_;
