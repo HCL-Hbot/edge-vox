@@ -21,6 +21,11 @@ For the tests to work, you'll need to install Google Test:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>libgtest-dev
 </code></pre></div>
 
+Install SDL2 development libraries:
+
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>libsdl2-dev
+</code></pre></div>
+
 ## Architecture
 
 Key aspects of the library structure:
@@ -107,18 +112,18 @@ Other targets which are defined in the CMake files of this project are the Unit 
 
 - `CLFML_FACE_DETECTOR_BUILD_EXAMPLE_PROJECTS`; Build example projects (fragment & mic demo) (Default=ON, *only when project is not part of other project) --> <h3 id=integrating-it-into-your-own-project>Integrating it into your own project</h3> <p>Here are some CMake snippets which indicate how this project might be included into your own CMake project.</p> <p>TODO</p> <!-- !!! example "Automatically fetching from GitHub"
     CPU only:
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">include</span><span class="p">(</span><span class="s">FetchContent</span><span class="p">)</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">FetchContent_Declare</span><span class="p">(</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w"> </span><span class="s">Lowwi</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w"> </span><span class="s">GIT_REPOSITORY</span><span class="w"> </span><span class="s">https://github.com/CLFML/lowwi.git</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w"> </span><span class="s">GIT_TAG</span><span class="w">        </span><span class="s">main</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nb">FetchContent_MakeAvailable</span><span class="p">(</span><span class="s">Lowwi</span><span class="p">)</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="err">...</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">YOUR_MAIN_EXECUTABLE_NAME</span><span class="w"> </span><span class="s">CLFML::Lowwi</span><span class="p">)</span>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">include</span><span class="p">(</span><span class="s">FetchContent</span><span class="p">)</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">FetchContent_Declare</span><span class="p">(</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w"> </span><span class="s">Lowwi</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w"> </span><span class="s">GIT_REPOSITORY</span><span class="w"> </span><span class="s">https://github.com/CLFML/lowwi.git</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w"> </span><span class="s">GIT_TAG</span><span class="w">        </span><span class="s">main</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">)</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="nb">FetchContent_MakeAvailable</span><span class="p">(</span><span class="s">Lowwi</span><span class="p">)</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="err">...</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">YOUR_MAIN_EXECUTABLE_NAME</span><span class="w"> </span><span class="s">CLFML::Lowwi</span><span class="p">)</span>
 </code></pre></div>
 
 !!! example "Manually using add_subdirectory"
