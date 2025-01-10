@@ -15,6 +15,7 @@ option(EDGE_VOX_BUILD_EXAMPLES "Build examples" ON)
 find_package(PkgConfig REQUIRED)
 find_package(SDL2 REQUIRED)
 pkg_check_modules(MOSQUITTO REQUIRED libmosquitto)
+pkg_check_modules(SDL2 REQUIRED sdl2)
 
 # Add cmake modules directory
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -46,6 +47,7 @@ target_link_libraries(edge_vox
 target_link_directories(edge_vox
     PRIVATE
         ${MOSQUITTO_LIBRARY_DIRS}
+        ${SDL2_LIBRARY_DIRS}
 )
 
 # Installation
@@ -67,7 +69,7 @@ install(
 install(
     EXPORT edge_vox-targets
     FILE edge_vox-targets.cmake
-    NAMESPACE edge_vox::
+    # NAMESPACE edge_vox::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/edge_vox
 )
 
