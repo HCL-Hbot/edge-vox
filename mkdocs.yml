@@ -57,11 +57,22 @@ plugins:
   - mkdoxy:
       projects:
         edge-vox:
-          src: include
-          full_doc: true
-          recursive: true
-          generate_index: true
-          doxy_filename: Doxyfile
+          doxygen: doxygen
+          doxyfile: Doxyfile
+          ignore_errors: false
+          use_pages: true
+          sections:
+            - classes
+            - namespaces
+            - files      
+  # - mkdoxy:
+  #     projects:
+  #       edge-vox:
+  #         src: include
+  #         full_doc: true
+  #         recursive: true
+  #         generate_index: true
+  #         doxy_filename: Doxyfile
 
 markdown_extensions:
   - pymdownx.highlight:
