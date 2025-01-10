@@ -1,6 +1,6 @@
-site_name: edgfe-vox
+site_name: edge-vox
 site_description: C++ client for edge server voice interactions
-repo_url: https://github.com/yourusername/edge-vox
+repo_url: https://github.com/hcl-hbot/edge-vox
 repo_name: edge-vox
 
 # extra_css:
@@ -73,21 +73,31 @@ markdown_extensions:
   - pymdownx.details
   - attr_list
   - md_in_html
-  
+
 nav:
   - Home: index.md
-  - Getting Started:
-    - usage/overview.md
-  #   - Build Environment:
-  #     - usage/build_environment/usage_with_windows.md
-  #     - usage/build_environment/usage_with_mac.md
-  #     - usage/build_environment/usage_with_linux.md
-    - API Documentation:
-    - Examples:
-      - usage/demo.md
-  #     - usage/lowwi_demo_mic.md
-  # - Implementation:
-  #   - about/implementation.md
+  - Getting Started: usage/overview.md
+  - API Documentation: api/
+  - Examples:
+    - Demo: usage/demo.md
   - Contributing:
-    - contributing/rules.md
-    - contributing/license.md
+    - Rules: contributing/rules.md
+    - License: contributing/license.md
+
+# nav:
+#   - Home: index.md
+#   - Getting Started:
+#     - usage/overview.md
+#   #   - Build Environment:
+#   #     - usage/build_environment/usage_with_windows.md
+#   #     - usage/build_environment/usage_with_mac.md
+#   #     - usage/build_environment/usage_with_linux.md
+#     - API Documentation:
+#     - Examples:
+#       - usage/demo.md
+#   #     - usage/lowwi_demo_mic.md
+#   # - Implementation:
+#   #   - about/implementation.md
+#   - Contributing:
+#     - contributing/rules.md
+#     - contributing/license.md
