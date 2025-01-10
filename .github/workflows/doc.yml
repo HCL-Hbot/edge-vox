@@ -14,8 +14,11 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fixed git depth issue
 
       - uses: actions/setup-python@v5
         with:
@@ -46,6 +49,9 @@ jobs:
             mkdocs-minify-plugin \
             mkdocs-redirects \
             mkdocs-awesome-pages-plugin
+
+      - name: Create Doxyfile
+        run: doxygen -g            
 
       - name: Build and deploy documentation
         run: mkdocs gh-deploy --force
