@@ -34,3 +34,6 @@ cmake-*/
 # CMakeFiles/
 # CMakeCache.txt
 # cmake_install.cmake
+
+# Local temporary folders
+tmp/

@@ -17,6 +17,59 @@ The library provides a robust C++ interface for:
 - Comprehensive error handling and connection management
 - Simple API for voice chat applications
 
+## Prerequisites
+<!-- 
+Install Mosquitto MQTT Broker on Ubuntu 24.04
+
+```console
+sudo apt install -y mosquitto
+```  -->
+
+<!-- Install and Test the Mosquitto Clients
+
+```console
+sudo apt install -y mosquitto-clients
+``` -->
+
+Install Mosquitto dependencies
+
+```bash
+sudo apt-get install libmosquitto-dev pkg-config
+```
+
+For the tests to work, you'll need to install Google Test:
+
+```bash
+sudo apt-get install libgtest-dev
+```
+
+## Architecture
+
+Key aspects of the library structure:
+
+1. PIMPL Pattern: The Client class uses the PIMPL (Pointer to Implementation) idiom to hide implementation details and provide ABI stability.
+
+2. Modular Design: The code is split into logical components:
+    - core: Main client interface
+    - audio: Audio processing functionality
+    - net: Network-related code (RTP, control messages)
+
+3. Configuration: Separate config structures for audio and streaming settings
+
+
+The client implementation ties together all the components:
+
+AudioProcessor for handling audio capture
+RtpStreamer for sending audio data
+ControlClient for MQTT communication
+
+Key features of the implementation:
+
+Thread-safe operations using atomic flags
+RAII-style resource management
+Error handling and state validation
+Configuration management
+Callback-based status updates
 
 ## API
 The library API consists of the following functions:
