@@ -43,6 +43,12 @@ For the tests to work, you'll need to install Google Test:
 sudo apt-get install libgtest-dev
 ```
 
+Install SDL2 development libraries:
+
+```bash
+sudo apt-get install libsdl2-dev
+```
+
 ## Architecture
 
 Key aspects of the library structure:

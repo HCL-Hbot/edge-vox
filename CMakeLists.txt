@@ -13,6 +13,7 @@ option(EDGE_VOX_BUILD_EXAMPLES "Build examples" ON)
 
 # Find required packages
 find_package(PkgConfig REQUIRED)
+find_package(SDL2 REQUIRED)
 pkg_check_modules(MOSQUITTO REQUIRED libmosquitto)
 
 # Add cmake modules directory
@@ -21,7 +22,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # Library target
 add_library(edge_vox
     src/core/client.cpp
-    src/audio/audio_processor.cpp
     src/net/rtp_streamer.cpp
     src/net/control_client.cpp
 )
@@ -31,13 +31,15 @@ target_include_directories(edge_vox
         $<INSTALL_INTERFACE:include>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${MOSQUITTO_INCLUDE_DIRS}        
+        ${MOSQUITTO_INCLUDE_DIRS}
+        ${SDL2_INCLUDE_DIRS}
 )
 
 # Link dependencies
 target_link_libraries(edge_vox
     PRIVATE
         ${MOSQUITTO_LIBRARIES}
+        ${SDL2_LIBRARIES}
 )
 
 # Link directories for dependencies
@@ -45,14 +47,6 @@ target_link_directories(edge_vox
     PRIVATE
         ${MOSQUITTO_LIBRARY_DIRS}
 )
-
-# # Organize source files
-# file(GLOB_RECURSE SOURCES "src/*.cpp")
-# target_sources(edge_vox PRIVATE ${SOURCES})
-
-# # Dependencies
-# find_package(Mosquitto REQUIRED)
-# target_link_libraries(edge_vox PRIVATE Mosquitto::Mosquitto)
 
 # Installation
 include(GNUInstallDirs)
