@@ -50,8 +50,5 @@ jobs:
             mkdocs-redirects \
             mkdocs-awesome-pages-plugin
 
-      - name: Create Doxyfile
-        run: doxygen -g            
-
       - name: Build and deploy documentation
         run: mkdocs gh-deploy --force

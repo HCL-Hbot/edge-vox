@@ -54,33 +54,6 @@ plugins:
   - git-authors
   - minify:
       minify_html: true
-  - mkdoxy:
-      projects:
-        edge-vox:
-          doxygen-source: include/
-          doxygen-output: docs/doxygen
-          doxygen-config:
-            FILE_PATTERNS: "*.hpp *.cpp"
-            RECURSIVE: YES
-            GENERATE_XML: YES
-
-        # edge-vox:
-        #   doxygen: doxygen
-        #   doxyfile: Doxyfile
-        #   ignore_errors: false
-        #   use_pages: true
-        #   sections:
-        #     - classes
-        #     - namespaces
-        #     - files      
-  # - mkdoxy:
-  #     projects:
-  #       edge-vox:
-  #         src: include
-  #         full_doc: true
-  #         recursive: true
-  #         generate_index: true
-  #         doxy_filename: Doxyfile
 
 markdown_extensions:
   - pymdownx.highlight:
