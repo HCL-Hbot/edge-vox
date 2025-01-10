@@ -1,0 +1,51 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ hashFiles('requirements.txt') }}
+          path: |
+            .cache
+            site
+          restore-keys: |
+            mkdocs-material-
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install doxygen graphviz
+
+      - name: Install Python dependencies
+        run: |
+          pip install \
+            mkdocs-material \
+            mkdoxy \
+            mkdocs-git-revision-date-plugin \
+            mkdocs-git-authors-plugin \
+            mkdocs-minify-plugin \
+            mkdocs-redirects \
+            mkdocs-awesome-pages-plugin
+
+      - name: Build and deploy documentation
+        run: mkdocs gh-deploy --force
