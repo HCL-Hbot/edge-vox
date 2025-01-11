@@ -23,6 +23,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # Library target
 add_library(edge_vox
     src/core/client.cpp
+    src/audio/audio_async.cpp    
     src/net/rtp_streamer.cpp
     src/net/control_client.cpp
 )
@@ -38,14 +39,14 @@ target_include_directories(edge_vox
 
 # Link dependencies
 target_link_libraries(edge_vox
-    PRIVATE
+    PUBLIC
         ${MOSQUITTO_LIBRARIES}
         ${SDL2_LIBRARIES}
 )
 
 # Link directories for dependencies
 target_link_directories(edge_vox
-    PRIVATE
+    PUBLIC
         ${MOSQUITTO_LIBRARY_DIRS}
         ${SDL2_LIBRARY_DIRS}
 )

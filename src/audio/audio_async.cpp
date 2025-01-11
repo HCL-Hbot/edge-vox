@@ -20,8 +20,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <audio_async.hpp>
-
+#include "edge_vox/audio/audio_async.hpp"
 
 audio_async::audio_async(int len_ms) {
     m_len_ms = len_ms;
@@ -49,7 +48,8 @@ bool audio_async::init(int capture_id, int sample_rate) {
         int nDevices = SDL_GetNumAudioDevices(SDL_TRUE);
         fprintf(stderr, "%s: found %d capture devices:\n", __func__, nDevices);
         for (int i = 0; i < nDevices; i++) {
-            fprintf(stderr, "%s:    - Capture device #%d: '%s'\n", __func__, i, SDL_GetAudioDeviceName(i, SDL_TRUE));
+            fprintf(stderr, "%s:    - Capture device #%d: '%s'\n", __func__, i,
+                    SDL_GetAudioDeviceName(i, SDL_TRUE));
         }
     }
 
@@ -59,43 +59,48 @@ bool audio_async::init(int capture_id, int sample_rate) {
     SDL_zero(capture_spec_requested);
     SDL_zero(capture_spec_obtained);
 
-    capture_spec_requested.freq     = sample_rate;
-    capture_spec_requested.format   = AUDIO_F32;
+    capture_spec_requested.freq = sample_rate;
+    capture_spec_requested.format = AUDIO_F32;
     capture_spec_requested.channels = 1;
-    capture_spec_requested.samples  = 1024;
-    capture_spec_requested.callback = [](void * userdata, uint8_t * stream, int len) {
-        audio_async * audio = (audio_async *) userdata;
+    capture_spec_requested.samples = 1024;
+    capture_spec_requested.callback = [](void *userdata, uint8_t *stream, int len) {
+        audio_async *audio = (audio_async *)userdata;
         audio->callback(stream, len);
     };
     capture_spec_requested.userdata = this;
 
-      if (capture_id >= 0) {
-        fprintf(stderr, "%s: attempt to open capture device %d : '%s' ...\n", __func__, capture_id, SDL_GetAudioDeviceName(capture_id, SDL_TRUE));
-        m_dev_id_in = SDL_OpenAudioDevice(SDL_GetAudioDeviceName(capture_id, SDL_TRUE), SDL_TRUE, &capture_spec_requested, &capture_spec_obtained, 0);
+    if (capture_id >= 0) {
+        fprintf(stderr, "%s: attempt to open capture device %d : '%s' ...\n", __func__, capture_id,
+                SDL_GetAudioDeviceName(capture_id, SDL_TRUE));
+        m_dev_id_in = SDL_OpenAudioDevice(SDL_GetAudioDeviceName(capture_id, SDL_TRUE), SDL_TRUE,
+                                          &capture_spec_requested, &capture_spec_obtained, 0);
     } else {
         fprintf(stderr, "%s: attempt to open default capture device ...\n", __func__);
-        m_dev_id_in = SDL_OpenAudioDevice(nullptr, SDL_TRUE, &capture_spec_requested, &capture_spec_obtained, 0);
+        m_dev_id_in = SDL_OpenAudioDevice(nullptr, SDL_TRUE, &capture_spec_requested,
+                                          &capture_spec_obtained, 0);
     }
 
-
     if (!m_dev_id_in) {
-        fprintf(stderr, "%s: couldn't open an audio device for capture: %s!\n", __func__, SDL_GetError());
+        fprintf(stderr, "%s: couldn't open an audio device for capture: %s!\n", __func__,
+                SDL_GetError());
         m_dev_id_in = 0;
 
         return false;
     } else {
-        fprintf(stderr, "%s: obtained spec for input device (SDL Id = %d):\n", __func__, m_dev_id_in);
-        fprintf(stderr, "%s:     - sample rate:       %d\n",                   __func__, capture_spec_obtained.freq);
-        fprintf(stderr, "%s:     - format:            %d (required: %d)\n",    __func__, capture_spec_obtained.format,
-                capture_spec_requested.format);
-        fprintf(stderr, "%s:     - channels:          %d (required: %d)\n",    __func__, capture_spec_obtained.channels,
-                capture_spec_requested.channels);
-        fprintf(stderr, "%s:     - samples per frame: %d\n",                   __func__, capture_spec_obtained.samples);
+        fprintf(stderr, "%s: obtained spec for input device (SDL Id = %d):\n", __func__,
+                m_dev_id_in);
+        fprintf(stderr, "%s:     - sample rate:       %d\n", __func__, capture_spec_obtained.freq);
+        fprintf(stderr, "%s:     - format:            %d (required: %d)\n", __func__,
+                capture_spec_obtained.format, capture_spec_requested.format);
+        fprintf(stderr, "%s:     - channels:          %d (required: %d)\n", __func__,
+                capture_spec_obtained.channels, capture_spec_requested.channels);
+        fprintf(stderr, "%s:     - samples per frame: %d\n", __func__,
+                capture_spec_obtained.samples);
     }
 
     m_sample_rate = capture_spec_obtained.freq;
 
-    m_audio.resize((m_sample_rate*m_len_ms)/1000);
+    m_audio.resize((m_sample_rate * m_len_ms) / 1000);
 
     return true;
 }
@@ -158,7 +163,7 @@ bool audio_async::clear() {
 }
 
 // callback to be called by SDL
-void audio_async::callback(uint8_t * stream, int len) {
+void audio_async::callback(uint8_t *stream, int len) {
     if (!m_running) {
         return;
     }
@@ -191,7 +196,7 @@ void audio_async::callback(uint8_t * stream, int len) {
     }
 }
 
-void audio_async::get(int ms, std::vector<float> & result) {
+void audio_async::get(int ms, std::vector<float> &result) {
     if (!m_dev_id_in) {
         fprintf(stderr, "%s: no audio device to get audio from!\n", __func__);
         return;

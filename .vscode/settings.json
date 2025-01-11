@@ -4,6 +4,7 @@
     "cmake.configureOnOpen": true,
     "files.associations": {
         "*.h": "cpp",
-        "*.hpp": "cpp"
+        "*.hpp": "cpp",
+        "stdexcept": "cpp"
     }
 }
