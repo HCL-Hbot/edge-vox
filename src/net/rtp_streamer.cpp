@@ -12,7 +12,29 @@ class EdgeVoxRtpStreamer::Impl {
 public:
     Impl() : socket_(-1), sequence_number_(0), active_(false) {}
 
+    // bool init(const std::string& host, uint16_t port, uint32_t payload_size) {
+    //     host_ = host;
+    //     port_ = port;
+    //     payload_size_ = payload_size;
+
+    //     socket_ = socket(AF_INET, SOCK_DGRAM, 0);
+    //     if (socket_ < 0) {
+    //         return false;
+    //     }
+
+    //     memset(&dest_addr_, 0, sizeof(dest_addr_));
+    //     dest_addr_.sin_family = AF_INET;
+    //     dest_addr_.sin_port = htons(port_);
+    //     inet_pton(AF_INET, host_.c_str(), &dest_addr_.sin_addr);
+
+    //     return true;
+    // }
+
     bool init(const std::string& host, uint16_t port, uint32_t payload_size) {
+        if (host.empty()) {
+            return false;
+        }
+
         host_ = host;
         port_ = port;
         payload_size_ = payload_size;
@@ -25,7 +47,14 @@ public:
         memset(&dest_addr_, 0, sizeof(dest_addr_));
         dest_addr_.sin_family = AF_INET;
         dest_addr_.sin_port = htons(port_);
-        inet_pton(AF_INET, host_.c_str(), &dest_addr_.sin_addr);
+
+        // Properly check inet_pton result
+        int result = inet_pton(AF_INET, host_.c_str(), &dest_addr_.sin_addr);
+        if (result <= 0) {
+            // result == 0 means invalid format, result < 0 means error
+            stop();
+            return false;
+        }
 
         return true;
     }
@@ -33,8 +62,24 @@ public:
     bool start() {
         if (active_)
             return true;
-        if (socket_ < 0)
-            return false;
+
+        // If socket was closed, recreate it
+        if (socket_ < 0) {
+            socket_ = socket(AF_INET, SOCK_DGRAM, 0);
+            if (socket_ < 0) {
+                return false;
+            }
+
+            // Recreate the destination address
+            memset(&dest_addr_, 0, sizeof(dest_addr_));
+            dest_addr_.sin_family = AF_INET;
+            dest_addr_.sin_port = htons(port_);
+            if (inet_pton(AF_INET, host_.c_str(), &dest_addr_.sin_addr) <= 0) {
+                stop();
+                return false;
+            }
+        }
+
         active_ = true;
         return true;
     }
