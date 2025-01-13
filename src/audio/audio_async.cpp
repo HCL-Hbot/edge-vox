@@ -113,7 +113,7 @@ bool audio_async::resume() {
 
     if (m_running) {
         fprintf(stderr, "%s: already running!\n", __func__);
-        return false;
+        // return false;
     }
 
     SDL_PauseAudioDevice(m_dev_id_in, 0);
@@ -131,7 +131,7 @@ bool audio_async::pause() {
 
     if (!m_running) {
         fprintf(stderr, "%s: already paused!\n", __func__);
-        return false;
+        // return false;
     }
 
     SDL_PauseAudioDevice(m_dev_id_in, 1);
