@@ -49,6 +49,8 @@ Install SDL2 development libraries:
 sudo apt-get install libsdl2-dev
 ```
 
+Or SDL3?
+
 ## Architecture
 
 Key aspects of the library structure:
