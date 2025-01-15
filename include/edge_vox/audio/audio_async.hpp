@@ -20,7 +20,6 @@
  * IN THE SOFTWARE.
  */
 
-
 #ifndef AUDIO_ASYNC_HPP
 #define AUDIO_ASYNC_HPP
 
@@ -29,8 +28,8 @@
 
 #include <atomic>
 #include <cstdint>
-#include <vector>
 #include <mutex>
+#include <vector>
 
 //
 // SDL Audio capture
@@ -48,12 +47,13 @@ public:
     bool resume();
     bool pause();
     bool clear();
+    bool close();
 
     // callback to be called by SDL
-    void callback(uint8_t * stream, int len);
+    void callback(uint8_t* stream, int len);
 
     // get audio data from the circular buffer
-    void get(int ms, std::vector<float> & audio);
+    void get(int ms, std::vector<float>& audio);
 
 private:
     SDL_AudioDeviceID m_dev_id_in = 0;
@@ -62,11 +62,11 @@ private:
     int m_sample_rate = 0;
 
     std::atomic_bool m_running;
-    std::mutex       m_mutex;
+    std::mutex m_mutex;
 
     std::vector<float> m_audio;
-    size_t             m_audio_pos = 0;
-    size_t             m_audio_len = 0;
+    size_t m_audio_pos = 0;
+    size_t m_audio_len = 0;
 };
 
 // Return false if need to quit

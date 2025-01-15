@@ -162,6 +162,18 @@ bool audio_async::clear() {
     return true;
 }
 
+bool audio_async::close() {
+    if (!m_dev_id_in) {
+        fprintf(stderr, "%s: no audio device to close!\n", __func__);
+        return false;
+    }
+    // SDL_CloseAudioDevice(m_dev_id_in);
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    SDL_Quit();
+
+    return true;
+}
+
 // callback to be called by SDL
 void audio_async::callback(uint8_t *stream, int len) {
     if (!m_running) {
