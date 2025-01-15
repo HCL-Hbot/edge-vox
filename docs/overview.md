@@ -43,6 +43,11 @@ For the tests to work, you'll need to install Google Test:
 sudo apt-get install libgtest-dev
 ```
 
+You'll also need to install the Google Mock development package:
+```bash
+sudo apt-get install libgmock-dev
+```
+
 Install SDL2 development libraries:
 
 ```bash

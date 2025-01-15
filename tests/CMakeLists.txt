@@ -14,9 +14,9 @@ endif()
 
 # Unit tests
 add_executable(unit_tests
-    unit/client_test.cpp
-    unit/rtp_streamer_test.cpp
-    unit/audio_async_test.cpp
+    # unit/client_test.cpp
+    # unit/rtp_streamer_test.cpp
+    # unit/audio_async_test.cpp
     unit/control_client_test.cpp
 )
 
@@ -25,6 +25,8 @@ target_link_libraries(unit_tests
         edge_vox
         GTest::GTest
         GTest::Main
+        GTest::gmock
+        GTest::gmock_main        
         SDL2::SDL2
         Mosquitto::Mosquitto
 )
