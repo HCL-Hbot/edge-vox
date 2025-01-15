@@ -123,8 +123,3 @@ TEST_F(EdgeVoxRtpStreamerTest, DifferentPayloadSizesTest) {
     EXPECT_TRUE(small_streamer.send_audio(samples));
     EXPECT_TRUE(large_streamer.send_audio(samples));
 }
-
-int main(int argc, char **argv) {
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

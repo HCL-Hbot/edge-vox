@@ -17,6 +17,7 @@ add_executable(unit_tests
     unit/client_test.cpp
     unit/rtp_streamer_test.cpp
     unit/audio_async_test.cpp
+    unit/control_client_test.cpp
 )
 
 target_link_libraries(unit_tests
