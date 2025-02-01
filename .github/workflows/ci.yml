@@ -10,22 +10,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Install Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake ninja-build
-
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -G Ninja
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build
-
-    - name: Check formatting
-      run: |
-        sudo apt-get install -y clang-format
-        find ${{github.workspace}}/include ${{github.workspace}}/src -iname "*.hpp" -o -iname "*.cpp" | \
-        xargs clang-format --dry-run --Werror
-        
+      - uses: actions/checkout@v4
+      
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libsdl2-dev
+      
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -G Ninja
+      
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build
+      
+      - name: Check formatting
+        run: |
+          sudo apt-get install -y clang-format
+          find ${{github.workspace}}/include ${{github.workspace}}/src -iname "*.hpp" -o -iname "*.cpp" | \
+          xargs clang-format --dry-run --Werror
+          
