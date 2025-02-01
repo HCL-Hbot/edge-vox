@@ -18,18 +18,11 @@ The library provides a robust C++ interface for:
 - Simple API for voice chat applications
 
 ## Prerequisites
-<!-- 
-Install Mosquitto MQTT Broker on Ubuntu 24.04
+Install Mosquitto MQTT Broker and clients
 
-```console
-sudo apt install -y mosquitto
-```  -->
-
-<!-- Install and Test the Mosquitto Clients
-
-```console
-sudo apt install -y mosquitto-clients
-``` -->
+```bash
+sudo apt install -y mosquitto mosquitto-clients
+```
 
 Install Mosquitto dependencies
 

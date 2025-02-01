@@ -132,13 +132,23 @@ TEST_F(AudioAsyncTest, BasicAudioCaptureTest) {
     ASSERT_FALSE(audio_buffer.empty())
         << "Failed to capture any audio data after " << MAX_ATTEMPTS << " attempts";
 
-    // Print first few samples if we got any
     if (!audio_buffer.empty()) {
+        // Print first few samples if we got any
         std::cout << "First few samples: ";
         for (size_t i = 0; i < std::min(size_t(5), audio_buffer.size()); i++) {
             std::cout << audio_buffer[i] << " ";
         }
         std::cout << std::endl;
+
+        // Calculate RMS
+        double sum = 1e-10;  // Small epsilon
+        for (const float sample : audio_buffer) {
+            sum += static_cast<double>(sample * sample);
+        }
+        double rms = std::sqrt(sum / audio_buffer.size());
+        std::cout << "\nRMS level: " << rms;
+        std::cout << std::endl;
+
         audio_buffer.clear();
     }
 
