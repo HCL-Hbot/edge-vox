@@ -40,7 +40,8 @@ public:
     audio_async(int len_ms);
     ~audio_async();
 
-    bool init(int capture_id, int sample_rate);
+    bool init(int capture_id, int sample_rate);  // Keep old function for compatibility
+    bool init(int capture_id, int playback_id, int sample_rate);
 
     // start capturing audio via the provided SDL callback
     // keep last len_ms seconds of audio in a circular buffer
@@ -49,24 +50,40 @@ public:
     bool clear();
     bool close();
 
-    // callback to be called by SDL
-    void callback(uint8_t* stream, int len);
+    // callback handlers to be called by SDL
+    void capture_callback(uint8_t* stream, int len);
+    void playback_callback(uint8_t* stream, int len);
 
-    // get audio data from the circular buffer
+    // get capture data from the circular buffer
     void get(int ms, std::vector<float>& audio);
+
+    // Playback control
+    bool start_playback();
+    bool stop_playback();
+    bool is_playing() const;
+    bool play_audio(const std::vector<float>& audio);
+    void clear_playback_buffer();
+    size_t get_playback_buffer_size() const;
 
 private:
     SDL_AudioDeviceID m_dev_id_in = 0;
+    SDL_AudioDeviceID m_dev_id_out = 0;
 
+    // Configuration
     int m_len_ms = 0;
     int m_sample_rate = 0;
 
+    // State tracking
     std::atomic_bool m_running;
+    std::atomic_bool m_playing;
+
+    // Thread synchronization
     std::mutex m_mutex;
 
-    std::vector<float> m_audio;
-    size_t m_audio_pos = 0;
-    size_t m_audio_len = 0;
+    std::vector<float> m_capture_buffer;
+    std::vector<float> m_playback_buffer;
+    size_t m_capture_buffer_pos = 0;
+    size_t m_capture_buffer_len = 0;
 };
 
 // Return false if need to quit

@@ -39,6 +39,14 @@ protected:
         }
     }
 
+    std::vector<float> generate_test_audio(size_t samples, float frequency = 440.0f) {
+        std::vector<float> audio(samples);
+        for (size_t i = 0; i < samples; i++) {
+            audio[i] = 0.5f * std::sin(2.0f * M_PI * frequency * i / AUDIO_SAMPLE_RATE);
+        }
+        return audio;
+    }
+
     std::shared_ptr<audio_async> audio;
 };
 
@@ -217,83 +225,248 @@ TEST_F(AudioAsyncTest, AudioDataValidityTest) {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
 
-// TEST_F(AudioAsyncTest, MultipleStartStopTest) {
-//     ASSERT_TRUE(audio->init(AUDIO_DEFAULT_MIC, AUDIO_SAMPLE_RATE));
+TEST_F(AudioAsyncTest, MultipleStartStopTest) {
+    ASSERT_TRUE(audio->init(AUDIO_DEFAULT_MIC, AUDIO_SAMPLE_RATE));
 
-//     for (int i = 0; i < 3; ++i) {
-//         EXPECT_TRUE(audio->resume());
-//         // Clear any samples in queue
-//         // EXPECT_TRUE(audio->clear());
-//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-//         EXPECT_TRUE(audio->pause());
-//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-//     }
-// }
+    for (int i = 0; i < 3; ++i) {
+        EXPECT_TRUE(audio->resume());
+        // Clear any samples in queue
+        EXPECT_TRUE(audio->clear());
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        EXPECT_TRUE(audio->pause());
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+}
 
-// TEST_F(AudioAsyncTest, BufferSizeTest) {
-//     const int buffer_ms = 1000;  // 1 second buffer
-//     auto audio_with_buffer = std::make_unique<audio_async>(buffer_ms);
+TEST_F(AudioAsyncTest, BufferSizeTest) {
+    const int buffer_ms = 1000;  // 1 second buffer
+    auto audio_with_buffer = std::make_unique<audio_async>(buffer_ms);
 
-//     ASSERT_TRUE(audio_with_buffer->init(AUDIO_DEFAULT_MIC, AUDIO_SAMPLE_RATE));
-//     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-//     ASSERT_TRUE(audio_with_buffer->resume());
+    ASSERT_TRUE(audio_with_buffer->init(AUDIO_DEFAULT_MIC, AUDIO_SAMPLE_RATE));
+    ASSERT_TRUE(audio_with_buffer->resume());
+    ASSERT_TRUE(audio_with_buffer->clear());
 
-//     // Record for longer than buffer size
-//     std::this_thread::sleep_for(std::chrono::milliseconds(buffer_ms + 500));
+    // Wait for initial buffer fill
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(1200));  // Wait a bit longer than buffer_ms
 
-//     std::vector<float> audio_data;
-//     audio_with_buffer->get(buffer_ms + 500, audio_data);
+    const size_t expected_samples = AUDIO_SAMPLE_RATE * (buffer_ms / 1000.0);
+    std::vector<float> audio_data;
+    bool success = false;
+    const int MAX_ATTEMPTS = 10;
 
-//     // Should only get buffer_ms worth of data
-//     const size_t expected_samples = AUDIO_SAMPLE_RATE * (buffer_ms / 1000.0);
-//     EXPECT_NEAR(audio_data.size(), expected_samples, expected_samples * 0.1);
-// }
+    for (int i = 0; i < MAX_ATTEMPTS && !success; i++) {
+        audio_data.clear();
+        audio_with_buffer->get(buffer_ms, audio_data);
 
-// TEST_F(AudioAsyncTest, InvalidOperationsTest) {
-//     // Try to pause before init
-//     EXPECT_FALSE(audio->pause());
+        std::cout << "Got " << audio_data.size() << " samples on attempt " << (i + 1) << std::endl;
 
-//     // Try to get data before init
-//     std::vector<float> audio_data;
-//     audio->get(100, audio_data);
-//     EXPECT_TRUE(audio_data.empty());
+        // Check if we got enough samples
+        if (audio_data.size() >= expected_samples * 0.9) {
+            success = true;
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
 
-//     // Initialize with invalid sample rate
-//     EXPECT_FALSE(audio->init(-1, 0));
-// }
+    ASSERT_TRUE(success) << "Failed to get enough audio data after " << MAX_ATTEMPTS << " attempts";
+    EXPECT_NEAR(audio_data.size(), expected_samples, expected_samples * 0.1);
 
-// // Mock test to demonstrate how to test SDL callback functionality
-// class MockAudioAsync : public audio_async {
-// public:
-//     explicit MockAudioAsync(int len_ms) : audio_async(len_ms) {}
+    ASSERT_TRUE(audio_with_buffer->pause());
+    ASSERT_TRUE(audio_with_buffer->close());
+}
 
-//     // Expose protected methods for testing
-//     void test_callback(uint8_t* stream, int len) {
-//         callback(stream, len);
-//     }
-// };
+// Mock test to demonstrate how to test SDL callback functionality
+class MockAudioAsync : public audio_async {
+public:
+    explicit MockAudioAsync(int len_ms) : audio_async(len_ms) {}
 
-// TEST_F(AudioAsyncTest, CallbackTest) {
-//     MockAudioAsync mock_audio(1000);
-//     ASSERT_TRUE(mock_audio.init(AUDIO_DEFAULT_MIC, AUDIO_SAMPLE_RATE));
+    // Expose protected methods for testing
+    void test_capture_callback(uint8_t* stream, int len) {
+        capture_callback(stream, len);
+    }
 
-//     // Create test audio data
-//     const int test_len = 1024;
-//     std::vector<uint8_t> test_data(test_len);
+    void test_playback_callback(uint8_t* stream, int len) {
+        playback_callback(stream, len);
+    }
+};
 
-//     // Fill with simple sine wave
-//     for (int i = 0; i < test_len / 4; ++i) {
-//         float sample = std::sin(2.0f * M_PI * 440.0f * i / float(AUDIO_SAMPLE_RATE));
-//         auto* float_ptr = reinterpret_cast<float*>(test_data.data());
-//         float_ptr[i] = sample;
-//     }
+TEST_F(AudioAsyncTest, CallbackTest) {
+    MockAudioAsync mock_audio(1000);
+    ASSERT_TRUE(mock_audio.init(AUDIO_DEFAULT_MIC, AUDIO_SAMPLE_RATE));
 
-//     // Process the test data through SDL callback
-//     mock_audio.test_callback(test_data.data(), test_len);
+    // Start the audio capture
+    ASSERT_TRUE(mock_audio.resume());
 
-//     // Verify the processed data
-//     std::vector<float> processed_data;
-//     mock_audio.get(100, processed_data);
+    // Create test audio data (one frame worth of samples)
+    const int test_len = 1024 * sizeof(float);  // Match SDL buffer size
+    std::vector<uint8_t> test_data(test_len);
+    auto* float_ptr = reinterpret_cast<float*>(test_data.data());
 
-//     EXPECT_FALSE(processed_data.empty());
-// }
+    // Fill with simple sine wave
+    const float frequency = 440.0f;  // A4 note
+    for (int i = 0; i < 1024; ++i) {
+        float t = static_cast<float>(i) / AUDIO_SAMPLE_RATE;
+        float_ptr[i] = std::sin(2.0f * M_PI * frequency * t);
+    }
+
+    // Process multiple frames of test data
+    const int num_frames = 5;
+    for (int frame = 0; frame < num_frames; ++frame) {
+        mock_audio.test_capture_callback(test_data.data(), test_len);
+        // Small delay to simulate real-time behavior
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    // Verify the processed data
+    std::vector<float> processed_data;
+    mock_audio.get(100, processed_data);
+
+    EXPECT_FALSE(processed_data.empty())
+        << "No audio data received after processing " << num_frames << " frames";
+
+    if (!processed_data.empty()) {
+        // Verify we got a reasonable amount of data
+        std::cout << "Received " << processed_data.size() << " samples" << std::endl;
+
+        // Check that we got some non-zero samples
+        bool has_nonzero = false;
+        for (float sample : processed_data) {
+            if (std::abs(sample) > 1e-6) {
+                has_nonzero = true;
+                break;
+            }
+        }
+        EXPECT_TRUE(has_nonzero) << "All samples are zero";
+
+        // Print first few samples for debugging
+        std::cout << "First few samples: ";
+        for (size_t i = 0; i < std::min(size_t(5), processed_data.size()); ++i) {
+            std::cout << processed_data[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    ASSERT_TRUE(mock_audio.pause());
+    ASSERT_TRUE(mock_audio.close());
+}
+
+TEST_F(AudioAsyncTest, PlaybackInitializationTest) {
+    // Test initialization with both capture and playback
+    EXPECT_TRUE(audio->init(AUDIO_DEFAULT_MIC, -1, AUDIO_SAMPLE_RATE));
+
+    // Initially not playing
+    EXPECT_FALSE(audio->is_playing());
+
+    // Test if playback can be started
+    EXPECT_TRUE(audio->start_playback());
+    EXPECT_TRUE(audio->is_playing());
+
+    // Add some test audio
+    std::vector<float> test_audio = generate_test_audio(AUDIO_SAMPLE_RATE / 10);  // 100ms of audio
+    EXPECT_TRUE(audio->play_audio(test_audio));
+
+    // Let it play briefly
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    // Test stopping playback
+    EXPECT_TRUE(audio->stop_playback());
+    EXPECT_FALSE(audio->is_playing());
+}
+
+TEST_F(AudioAsyncTest, AudioPlaybackTest) {
+    ASSERT_TRUE(audio->init(AUDIO_DEFAULT_MIC, -1, AUDIO_SAMPLE_RATE));
+
+    // Create test audio data (1 second of 440Hz sine wave)
+    std::vector<float> test_audio(AUDIO_SAMPLE_RATE);
+    for (size_t i = 0; i < test_audio.size(); i++) {
+        test_audio[i] = 0.5f * std::sin(2.0f * M_PI * 440.0f * i / AUDIO_SAMPLE_RATE);
+    }
+
+    // Initially not playing
+    EXPECT_FALSE(audio->is_playing());
+
+    // Add audio to playback buffer
+    EXPECT_TRUE(audio->play_audio(test_audio));
+
+    // Start playback
+    EXPECT_TRUE(audio->start_playback());
+    EXPECT_TRUE(audio->is_playing());
+
+    // Let it play for a short time
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Stop playback
+    EXPECT_TRUE(audio->stop_playback());
+    EXPECT_FALSE(audio->is_playing());
+}
+
+TEST_F(AudioAsyncTest, PlaybackBufferOverflowTest) {
+    ASSERT_TRUE(audio->init(AUDIO_DEFAULT_MIC, -1, AUDIO_SAMPLE_RATE));
+
+    // Initially not playing
+    EXPECT_FALSE(audio->is_playing());
+
+    // Create test audio data that's larger than the default buffer
+    std::vector<float> large_audio(AUDIO_SAMPLE_RATE * 2);  // 2 seconds of audio
+    for (size_t i = 0; i < large_audio.size(); i++) {
+        large_audio[i] = 0.5f * std::sin(2.0f * M_PI * 440.0f * i / AUDIO_SAMPLE_RATE);
+    }
+
+    // Should still accept large amounts of audio
+    EXPECT_TRUE(audio->play_audio(large_audio));
+
+    // Start playback
+    EXPECT_TRUE(audio->start_playback());
+    EXPECT_TRUE(audio->is_playing());
+
+    // Let it play briefly
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Stop playback
+    EXPECT_TRUE(audio->stop_playback());
+    EXPECT_FALSE(audio->is_playing());
+}
+
+TEST_F(AudioAsyncTest, SimultaneousCapturePlaybackTest) {
+    ASSERT_TRUE(audio->init(AUDIO_DEFAULT_MIC, -1, AUDIO_SAMPLE_RATE));
+
+    // Start capturing
+    ASSERT_TRUE(audio->resume());
+
+    // Record for a short period
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Get the recorded audio
+    std::vector<float> captured_audio;
+    audio->get(100, captured_audio);  // Get 100ms of audio
+
+    // Play it back
+    EXPECT_TRUE(audio->play_audio(captured_audio));
+    EXPECT_TRUE(audio->start_playback());
+
+    // Let it play while still capturing
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // Stop everything
+    EXPECT_TRUE(audio->stop_playback());
+    EXPECT_TRUE(audio->pause());
+}
+
+TEST_F(AudioAsyncTest, InvalidPlaybackOperationsTest) {
+    // Try playback operations before init
+    EXPECT_FALSE(audio->start_playback());
+    EXPECT_FALSE(audio->stop_playback());
+    EXPECT_FALSE(audio->is_playing());
+
+    std::vector<float> test_audio(1024, 0.0f);
+    EXPECT_FALSE(audio->play_audio(test_audio));
+
+    // Initialize only capture
+    ASSERT_TRUE(audio->init(AUDIO_DEFAULT_MIC, -1, AUDIO_SAMPLE_RATE));
+
+    // Now playback should work
+    EXPECT_TRUE(audio->play_audio(test_audio));
+    EXPECT_TRUE(audio->start_playback());
+    EXPECT_TRUE(audio->stop_playback());
+}
