@@ -44,6 +44,73 @@ sudo apt-get install libsdl2-dev
 
 Or SDL3?
 
+
+Install crypto support:
+
+```bash
+sudo apt-get install libcrypto++-dev
+```
+
+Clone uvgRTP:
+```bash
+git clone https://github.com/ultravideo/uvgRTP.git
+cd uvgRTP
+``` 
+
+Create pkgconfig file:
+```bash
+cat > libuvgrtp.pc.in << 'EOF'
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libuvgrtp
+Description: RTP library for real-time streaming
+Version: @PROJECT_VERSION@
+Libs: -L${libdir} -luvgrtp
+Cflags: -I${includedir}
+EOF
+```
+
+Update CMakeLists.txt to install pkgconfig file:
+```bash
+cat >> CMakeLists.txt << 'EOF'
+# Configure and install pkg-config file
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/libuvgrtp.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/libuvgrtp.pc
+    @ONLY
+)
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/libuvgrtp.pc
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+EOF
+``` 
+
+Build and install uvgRTP:
+```bash
+mkdir build && cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
+make -j$(nproc)
+sudo make install
+sudo ldconfig
+```
+
+<!-- Update pkg-config path (if needed):
+```bash
+# Add to ~/.bashrc or similar
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
+``` -->
+
+Verify installation:
+```bash
+pkg-config --modversion libuvgrtp  # Should print version number
+```
+
+
 ## Architecture
 
 Key aspects of the library structure:

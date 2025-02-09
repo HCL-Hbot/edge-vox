@@ -1,123 +1,143 @@
-#include "net/rtp_streamer.hpp"
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
+#include "rtp_streamer.hpp"
 
-#include <atomic>
 #include <cstring>
-#include <thread>
-
-#include "rtp_packet.hpp"
+#include <iostream>
+#include <regex>
+#include <uvgrtp/lib.hh>
 
 class EdgeVoxRtpStreamer::Impl {
 public:
-    Impl() : socket_(-1), active_(false) {
-        packet_ = std::make_unique<RtpPacket>();
+    Impl() : active_(false), session_(nullptr), stream_(nullptr) {}
+
+    ~Impl() {
+        stop();
     }
 
     bool init(const std::string& host, uint16_t port, uint32_t payload_size) {
-        if (host.empty()) {
+        try {
+            // Validate parameters
+            if (!isValidIPAddress(host)) {
+                std::cerr << "Invalid IP address format" << std::endl;
+                return false;
+            }
+
+            if (port == 0) {
+                std::cerr << "Invalid port number" << std::endl;
+                return false;
+            }
+
+            if (payload_size == 0) {
+                std::cerr << "Invalid payload size" << std::endl;
+                return false;
+            }
+
+            host_ = host;
+            port_ = port;
+            payload_size_ = payload_size;
+
+            // Create a global RTP context object
+            ctx_ = std::make_unique<uvgrtp::context>();
+
+            // Create a session with the remote address
+            session_ = ctx_->create_session(host_);
+            if (!session_) {
+                std::cerr << "Failed to create RTP session" << std::endl;
+                return false;
+            }
+
+            return true;
+        } catch (const std::exception& e) {
+            std::cerr << "RTP init error: " << e.what() << std::endl;
             return false;
         }
-
-        host_ = host;
-        port_ = port;
-        payload_size_ = payload_size;
-
-        socket_ = socket(AF_INET, SOCK_DGRAM, 0);
-        if (socket_ < 0) {
-            return false;
-        }
-
-        memset(&dest_addr_, 0, sizeof(dest_addr_));
-        dest_addr_.sin_family = AF_INET;
-        dest_addr_.sin_port = htons(port_);
-
-        // Properly check inet_pton result
-        int result = inet_pton(AF_INET, host_.c_str(), &dest_addr_.sin_addr);
-        if (result <= 0) {
-            stop();
-            return false;
-        }
-
-        // Set socket options for real-time streaming
-        int optval = 1;
-        if (setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
-            return false;
-        }
-
-        return true;
     }
 
     bool start() {
-        if (active_) {
-            return true;
-        }
+        try {
+            if (active_) {
+                return true;
+            }
 
-        // If socket was closed, recreate it
-        if (socket_ < 0) {
-            if (!init(host_, port_, payload_size_)) {
+            if (!session_) {
+                std::cerr << "Cannot start: session not initialized" << std::endl;
                 return false;
             }
-        }
 
-        active_ = true;
-        return true;
+            // Create a media stream with the specified port
+            int flags = RCE_SEND_ONLY;
+            stream_ = session_->create_stream(port_, RTP_FORMAT_GENERIC, flags);
+
+            if (!stream_) {
+                std::cerr << "Failed to create media stream" << std::endl;
+                return false;
+            }
+
+            active_ = true;
+            return true;
+        } catch (const std::exception& e) {
+            std::cerr << "Start error: " << e.what() << std::endl;
+            return false;
+        }
     }
 
     void stop() {
-        active_ = false;
-        if (socket_ >= 0) {
-            shutdown(socket_, SHUT_RDWR);
-            close(socket_);
-            socket_ = -1;
+        try {
+            if (stream_) {
+                if (session_) {
+                    session_->destroy_stream(stream_);
+                }
+                stream_ = nullptr;
+            }
+            if (session_) {
+                if (ctx_) {
+                    ctx_->destroy_session(session_);
+                }
+                session_ = nullptr;
+            }
+            active_ = false;
+        } catch (const std::exception& e) {
+            std::cerr << "Stop error: " << e.what() << std::endl;
         }
     }
 
     bool send_audio(const std::vector<float>& samples) {
-        if (!active_ || socket_ < 0) {
+        if (!active_ || !stream_) {
             return false;
         }
 
-        // Convert float samples to network bytes
-        std::vector<uint8_t> audio_data;
-        audio_data.reserve(samples.size() * sizeof(int16_t));
-
-        for (float sample : samples) {
-            int16_t pcm = static_cast<int16_t>(sample * 32767.0f);
-            audio_data.push_back((pcm >> 8) & 0xFF);
-            audio_data.push_back(pcm & 0xFF);
+        if (samples.empty()) {
+            std::cerr << "Failed to send RTP frame" << std::endl;
+            return false;
         }
 
-        // Set the payload
-        packet_->setPayload(audio_data);
+        try {
+            // Convert float samples to int16_t for network transmission
+            std::vector<uint8_t> audio_data;
+            audio_data.reserve(samples.size() * sizeof(int16_t));
 
-        // Set marker bit if this is the first packet in a talkspurt
-        if (samples_sent_ == 0) {
-            packet_->setMarker(true);
-        } else {
-            packet_->setMarker(false);
-        }
+            for (float sample : samples) {
+                int16_t pcm = static_cast<int16_t>(sample * 32767.0f);
+                audio_data.push_back((pcm >> 8) & 0xFF);
+                audio_data.push_back(pcm & 0xFF);
+            }
 
-        // Update timestamp based on number of samples
-        packet_->incrementTimestamp(samples.size());
+            // Create a unique_ptr for the frame data as required by uvgRTP
+            auto frame = std::make_unique<uint8_t[]>(audio_data.size());
+            std::memcpy(frame.get(), audio_data.data(), audio_data.size());
 
-        // Serialize the packet
-        auto packet_data = packet_->serialize();
-
-        // Send the packet
-        ssize_t sent = sendto(socket_, packet_data.data(), packet_data.size(), 0,
-                              (struct sockaddr*)&dest_addr_, sizeof(dest_addr_));
-
-        if (sent == static_cast<ssize_t>(packet_data.size())) {
-            packet_->incrementSequenceNumber();
-            samples_sent_ += samples.size();
+            // Send audio data using uvgRTP
+            int ret = stream_->push_frame(std::move(frame), audio_data.size(), RTP_NO_FLAGS);
+            if (ret != RTP_OK) {
+                std::cerr << "Failed to send RTP frame" << std::endl;
+                return false;
+            }
             return true;
-        }
 
-        return false;
+        } catch (const std::exception& e) {
+            std::cerr << "RTP send error: " << e.what() << std::endl;
+            return false;
+        }
     }
 
     bool is_active() const {
@@ -125,14 +145,24 @@ public:
     }
 
 private:
+    bool isValidIPAddress(const std::string& ip) {
+        // Simple IPv4 validation using regex
+        std::regex ipv4_pattern(
+            "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}"
+            "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+
+        return std::regex_match(ip, ipv4_pattern) || ip == "localhost";
+    }
+
+    std::unique_ptr<uvgrtp::context> ctx_;
+    uvgrtp::session* session_;
+    uvgrtp::media_stream* stream_;
+    bool active_;
+
+    // Store configuration
     std::string host_;
     uint16_t port_;
     uint32_t payload_size_;
-    int socket_;
-    struct sockaddr_in dest_addr_;
-    std::atomic<bool> active_;
-    std::unique_ptr<RtpPacket> packet_;
-    uint64_t samples_sent_{0};
 };
 
 EdgeVoxRtpStreamer::EdgeVoxRtpStreamer() : pimpl_(std::make_unique<Impl>()) {}

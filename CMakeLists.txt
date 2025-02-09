@@ -16,6 +16,8 @@ find_package(PkgConfig REQUIRED)
 find_package(SDL2 REQUIRED)
 pkg_check_modules(MOSQUITTO REQUIRED libmosquitto)
 pkg_check_modules(SDL2 REQUIRED sdl2)
+pkg_check_modules(UVGRTP REQUIRED libuvgrtp)
+pkg_check_modules(CRYPTOPP REQUIRED libcrypto++)
 
 # Add cmake modules directory
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -35,6 +37,8 @@ target_include_directories(edge_vox
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${MOSQUITTO_INCLUDE_DIRS}
         ${SDL2_INCLUDE_DIRS}
+        ${UVGRTP_INCLUDE_DIRS}
+        ${CRYPTOPP_INCLUDE_DIRS}
 )
 
 # Link dependencies
@@ -42,6 +46,8 @@ target_link_libraries(edge_vox
     PUBLIC
         ${MOSQUITTO_LIBRARIES}
         ${SDL2_LIBRARIES}
+        ${UVGRTP_LIBRARIES}
+        ${CRYPTOPP_LIBRARIES}        
 )
 
 # Link directories for dependencies
@@ -49,6 +55,8 @@ target_link_directories(edge_vox
     PUBLIC
         ${MOSQUITTO_LIBRARY_DIRS}
         ${SDL2_LIBRARY_DIRS}
+        ${UVGRTP_LIBRARY_DIRS}
+        ${CRYPTOPP_LIBRARY_DIRS}
 )
 
 # Installation

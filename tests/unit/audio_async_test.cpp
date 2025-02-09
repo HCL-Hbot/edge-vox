@@ -1,4 +1,3 @@
-// tests/unit/audio_async_test.cpp
 #include <gtest/gtest.h>
 
 #include <chrono>

@@ -1,4 +1,4 @@
-#include "../src/net/control_client.hpp"
+#include "net/control_client.hpp"
 
 #include <gtest/gtest.h>
 

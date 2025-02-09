@@ -8,6 +8,7 @@ public:
     EdgeVoxRtpStreamer();
     ~EdgeVoxRtpStreamer();
 
+    // Maintains same public interface as before
     bool init(const std::string& host, uint16_t port, uint32_t payload_size);
     bool start();
     void stop();
