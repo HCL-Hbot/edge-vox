@@ -27,6 +27,7 @@ add_library(edge_vox
     src/core/client.cpp
     src/audio/audio_async.cpp    
     src/net/rtp_streamer.cpp
+    src/net/rtp_receiver.cpp
     src/net/control_client.cpp
 )
 target_include_directories(edge_vox 

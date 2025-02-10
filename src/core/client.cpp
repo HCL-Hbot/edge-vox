@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "../net/control_client.hpp"
+#include "../net/rtp_receiver.hpp"
 #include "../net/rtp_streamer.hpp"
 #include "edge_vox/audio/audio_async.hpp"
 
@@ -56,6 +57,11 @@ public:
                 return false;
             }
 
+            // Initialize RTP receiver
+            if (!receiver_.init(server_ip, stream_config_.rtp_port + 1)) {
+                return false;
+            }
+
             // Connect control client
             if (!control_.connect(server_ip, stream_config_.control_port)) {
                 return false;
@@ -79,6 +85,12 @@ public:
 
     bool start_audio_stream() {
         if (!is_connected_) {
+            return false;
+        }
+
+        receiver_.set_audio_callback(
+            [this](const std::vector<float>& samples) { audio_.play_audio(samples); });
+        if (!receiver_.start()) {
             return false;
         }
 
@@ -154,6 +166,7 @@ private:
     EdgeVoxAudioConfig audio_config_;
     EdgeVoxStreamConfig stream_config_;
     EdgeVoxClient::StatusCallback status_callback_;
+    EdgeVoxRtpReceiver receiver_;
 
     std::atomic<bool> is_connected_;
     std::atomic<bool> is_streaming_;

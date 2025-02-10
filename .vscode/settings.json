@@ -71,7 +71,8 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "bitset": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "regex": "cpp"
     },
     "ros.distro": "jazzy"
 }
