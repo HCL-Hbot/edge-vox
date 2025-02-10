@@ -1,5 +1,6 @@
 #include "rtp_receiver.hpp"
 
+#include <iostream>
 #include <regex>
 #include <uvgrtp/lib.hh>
 
@@ -18,19 +19,21 @@ public:
             return;
         }
 
-        const auto* pcm_data = reinterpret_cast<const int16_t*>(frame->payload);
-        const size_t num_samples = frame->payload_len / sizeof(int16_t);
+        const size_t num_samples = frame->payload_len / 2;  // 2 bytes per sample
         std::vector<float> samples(num_samples);
 
-        for (size_t i = 0; i < num_samples; ++i) {
-            samples[i] = pcm_data[i] / 32767.0f;
+        for (size_t i = 0; i < num_samples; i++) {
+            uint16_t msb = frame->payload[i * 2];
+            uint16_t lsb = frame->payload[i * 2 + 1];
+            int16_t pcm = (msb << 8) | lsb;
+            samples[i] = pcm / 32767.0f;
         }
 
         self->callback_(samples);
         uvgrtp::frame::dealloc_frame(frame);
     }
 
-    bool init(const std::string& local_ip, uint16_t port) {
+    bool init(const std::string& local_ip, uint16_t port, int flags = 0) {
         try {
             // Validate IP and port
             if (!isValidIPAddress(local_ip) || port == 0) {
@@ -44,6 +47,8 @@ public:
             ctx_ = std::make_unique<uvgrtp::context>();
             session_ = ctx_->create_session(local_ip);
             port_ = port;
+            flags_ = flags;
+            std::cout << "Creating stream, flags:" << flags_ << std::endl;
 
             if (!session_) {
                 return false;
@@ -61,8 +66,8 @@ public:
         }
 
         try {
-            int flags = RCE_RECEIVE_ONLY;
-            stream_ = session_->create_stream(port_, RTP_FORMAT_GENERIC, flags);
+            std::cout << "Creating stream, flags:" << flags_ << std::endl;
+            stream_ = session_->create_stream(port_, RTP_FORMAT_GENERIC, flags_);
 
             if (!stream_) {
                 return false;
@@ -123,14 +128,15 @@ private:
     uvgrtp::media_stream* stream_;
     bool active_;
     uint16_t port_;
+    int flags_;
     AudioCallback callback_;
 };
 
 EdgeVoxRtpReceiver::EdgeVoxRtpReceiver() : pimpl_(std::make_unique<Impl>()) {}
 EdgeVoxRtpReceiver::~EdgeVoxRtpReceiver() = default;
 
-bool EdgeVoxRtpReceiver::init(const std::string& local_ip, uint16_t port) {
-    return pimpl_->init(local_ip, port);
+bool EdgeVoxRtpReceiver::init(const std::string& local_ip, uint16_t port, int flags) {
+    return pimpl_->init(local_ip, port, flags);
 }
 
 bool EdgeVoxRtpReceiver::start() {

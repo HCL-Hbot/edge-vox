@@ -3,6 +3,7 @@
 #include <atomic>
 #include <stdexcept>
 #include <thread>
+#include <uvgrtp/lib.hh>
 
 #include "../net/control_client.hpp"
 #include "../net/rtp_receiver.hpp"
@@ -52,13 +53,15 @@ public:
 
         try {
             // Initialize RTP streamer
-            if (!rtp_streamer_.init(server_ip, stream_config_.rtp_port,
-                                    stream_config_.packet_size)) {
+            int sender_flags = RCE_FRAGMENT_GENERIC | RCE_SEND_ONLY;
+            if (!rtp_streamer_.init(server_ip, stream_config_.rtp_port, stream_config_.packet_size,
+                                    sender_flags)) {
                 return false;
             }
 
             // Initialize RTP receiver
-            if (!receiver_.init(server_ip, stream_config_.rtp_port + 1)) {
+            int receiver_flags = RCE_FRAGMENT_GENERIC | RCE_RECEIVE_ONLY;
+            if (!rtp_receiver_.init(server_ip, stream_config_.rtp_port + 1, receiver_flags)) {
                 return false;
             }
 
@@ -88,9 +91,9 @@ public:
             return false;
         }
 
-        receiver_.set_audio_callback(
+        rtp_receiver_.set_audio_callback(
             [this](const std::vector<float>& samples) { audio_.play_audio(samples); });
-        if (!receiver_.start()) {
+        if (!rtp_receiver_.start()) {
             return false;
         }
 
@@ -166,7 +169,7 @@ private:
     EdgeVoxAudioConfig audio_config_;
     EdgeVoxStreamConfig stream_config_;
     EdgeVoxClient::StatusCallback status_callback_;
-    EdgeVoxRtpReceiver receiver_;
+    EdgeVoxRtpReceiver rtp_receiver_;
 
     std::atomic<bool> is_connected_;
     std::atomic<bool> is_streaming_;

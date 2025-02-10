@@ -2,6 +2,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <uvgrtp/lib.hh>
 
 class EdgeVoxRtpReceiver {
 public:
@@ -10,7 +11,8 @@ public:
 
     using AudioCallback = std::function<void(const std::vector<float>&)>;
 
-    bool init(const std::string& local_ip, uint16_t port);
+    bool init(const std::string& local_ip, uint16_t port, int flags = RCE_RECEIVE_ONLY);
+
     bool start();
     void stop();
     bool is_active() const;

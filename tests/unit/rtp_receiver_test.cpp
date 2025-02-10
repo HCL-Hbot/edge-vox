@@ -60,14 +60,14 @@ TEST_F(EdgeVoxRtpReceiverTest, CallbackTest) {
     ASSERT_TRUE(receiver->init("127.0.0.1", 5005));
 
     bool callback_called = false;
+    std::vector<float> received;
     receiver->set_audio_callback([&](const std::vector<float>& samples) {
+        received = samples;
         callback_called = true;
-        received_samples.push_back(samples);
     });
 
     ASSERT_TRUE(receiver->start());
 
-    // Create a sender to test callback
     uvgrtp::context ctx;
     auto* sess = ctx.create_session("127.0.0.1");
     ASSERT_TRUE(sess != nullptr);
@@ -75,28 +75,31 @@ TEST_F(EdgeVoxRtpReceiverTest, CallbackTest) {
     auto* stream = sess->create_stream(5005, RTP_FORMAT_GENERIC, RCE_SEND_ONLY);
     ASSERT_TRUE(stream != nullptr);
 
-    // Send test audio data
-    std::vector<int16_t> test_data(480, 16384);  // 10ms of audio at 48kHz
-    EXPECT_TRUE(stream->push_frame(reinterpret_cast<uint8_t*>(test_data.data()),
-                                   test_data.size() * sizeof(int16_t), RTP_NO_FLAGS) == RTP_OK);
+    // Create test data
+    std::vector<uint8_t> payload;
+    int16_t test_pcm = 16384;
+    payload.push_back((test_pcm >> 8) & 0xFF);
+    payload.push_back(test_pcm & 0xFF);
+
+    ASSERT_TRUE(stream->push_frame(payload.data(), payload.size(), RTP_NO_FLAGS) == RTP_OK);
 
     // Wait for callback
     EXPECT_TRUE(waitForCondition([&]() { return callback_called; }));
-    EXPECT_FALSE(received_samples.empty());
+    EXPECT_FALSE(received.empty());
+    EXPECT_NEAR(received[0], test_pcm / 32767.0f, 0.0001f);
 
-    if (!received_samples.empty()) {
-        EXPECT_EQ(received_samples[0].size(), test_data.size());
-        // Check conversion from int16 to float
-        EXPECT_NEAR(received_samples[0][0], test_data[0] / 32767.0f, 0.0001f);
+    // Cleanup in reverse order
+    if (stream) {
+        sess->destroy_stream(stream);
     }
-
-    // Cleanup sender
-    sess->destroy_stream(stream);
-    ctx.destroy_session(sess);
+    if (sess) {
+        ctx.destroy_session(sess);
+    }
 }
 
 TEST_F(EdgeVoxRtpReceiverTest, MultipleStartStopCyclesTest) {
     ASSERT_TRUE(receiver->init("127.0.0.1", 5005));
+    bool callback_called = false;
 
     for (int i = 0; i < 3; ++i) {
         EXPECT_TRUE(receiver->start()) << "Failed to start on iteration " << i;

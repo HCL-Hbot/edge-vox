@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <string>
+#include <uvgrtp/lib.hh>
 #include <vector>
 
 class EdgeVoxRtpStreamer {
@@ -8,8 +9,8 @@ public:
     EdgeVoxRtpStreamer();
     ~EdgeVoxRtpStreamer();
 
-    // Maintains same public interface as before
-    bool init(const std::string& host, uint16_t port, uint32_t payload_size);
+    bool init(const std::string& host, uint16_t port, uint32_t payload_size,
+              int flags = RCE_SEND_ONLY);
     bool start();
     void stop();
     bool send_audio(const std::vector<float>& samples);

@@ -72,7 +72,13 @@
         "variant": "cpp",
         "bitset": "cpp",
         "fstream": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "complex": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "unordered_set": "cpp",
+        "source_location": "cpp",
+        "typeindex": "cpp"
     },
     "ros.distro": "jazzy"
 }

@@ -14,7 +14,7 @@ public:
         stop();
     }
 
-    bool init(const std::string& host, uint16_t port, uint32_t payload_size) {
+    bool init(const std::string& host, uint16_t port, uint32_t payload_size, int flags) {
         try {
             // Validate parameters
             if (!isValidIPAddress(host)) {
@@ -34,6 +34,7 @@ public:
 
             host_ = host;
             port_ = port;
+            flags_ = flags;
             payload_size_ = payload_size;
 
             // Create a global RTP context object
@@ -65,8 +66,7 @@ public:
             }
 
             // Create a media stream with the specified port
-            int flags = RCE_SEND_ONLY;
-            stream_ = session_->create_stream(port_, RTP_FORMAT_GENERIC, flags);
+            stream_ = session_->create_stream(port_, RTP_FORMAT_GENERIC, flags_);
 
             if (!stream_) {
                 std::cerr << "Failed to create media stream" << std::endl;
@@ -158,6 +158,7 @@ private:
     uvgrtp::session* session_;
     uvgrtp::media_stream* stream_;
     bool active_;
+    int flags_ = 0;
 
     // Store configuration
     std::string host_;
@@ -168,8 +169,9 @@ private:
 EdgeVoxRtpStreamer::EdgeVoxRtpStreamer() : pimpl_(std::make_unique<Impl>()) {}
 EdgeVoxRtpStreamer::~EdgeVoxRtpStreamer() = default;
 
-bool EdgeVoxRtpStreamer::init(const std::string& host, uint16_t port, uint32_t payload_size) {
-    return pimpl_->init(host, port, payload_size);
+bool EdgeVoxRtpStreamer::init(const std::string& host, uint16_t port, uint32_t payload_size,
+                              int flags) {
+    return pimpl_->init(host, port, payload_size, flags);
 }
 
 bool EdgeVoxRtpStreamer::start() {
