@@ -103,11 +103,11 @@ TEST_F(EdgeVoxRtpStreamerTest, SendEmptyAudioTest) {
 }
 
 TEST_F(EdgeVoxRtpStreamerTest, MultipleStartStopCyclesTest) {
-    ASSERT_TRUE(streamer->init("127.0.0.1", 5004, 512));
-
     for (int i = 0; i < 5; ++i) {
         std::cout << "Cycle " << i + 1 << "/5" << std::endl;
 
+        // Re-initialize for each cycle
+        ASSERT_TRUE(streamer->init("127.0.0.1", 5004, 512));
         EXPECT_TRUE(streamer->start());
         EXPECT_TRUE(streamer->is_active());
 
@@ -117,7 +117,6 @@ TEST_F(EdgeVoxRtpStreamerTest, MultipleStartStopCyclesTest) {
         streamer->stop();
         EXPECT_FALSE(streamer->is_active());
 
-        // Give some time for cleanup
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 }
