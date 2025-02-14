@@ -30,7 +30,7 @@ lib/
 *.app
 
 # CMake
-cmake-*/
+cmake*/
 # CMakeFiles/
 # CMakeCache.txt
 # cmake_install.cmake
