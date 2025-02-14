@@ -20,5 +20,7 @@ edge-vox provides a robust C++ interface for:
 - Minimal dependencies and small footprint
 - Comprehensive error handling and connection management
 - Simple API for voice chat applications
+- Creates ROS2 bindings as a separate component to keep the core EdgeVox library independent
+
 
 

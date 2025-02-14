@@ -4,6 +4,8 @@ Build/
 bin/
 out/
 lib/
+log/
+install/ 
 
 # VSCode specific
 .vscode/*

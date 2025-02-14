@@ -16,34 +16,18 @@ The library provides a robust C++ interface for:
 - Minimal dependencies and small footprint
 - Comprehensive error handling and connection management
 - Simple API for voice chat applications
+- Creates ROS2 bindings as a separate component to keep the core EdgeVox library independent
 
 ## Prerequisites
-Install Mosquitto MQTT Broker and clients
 
-```bash
-sudo apt install -y mosquitto mosquitto-clients
-```
-
-Install Mosquitto dependencies
-
-```bash
-sudo apt-get install libmosquitto-dev pkg-config
-```
-
-For the tests to work, you'll need to install Google Test:
-
-```bash
-sudo apt-get install libgtest-dev
-```
-
+### SDL2
 Install SDL2 development libraries:
 
 ```bash
 sudo apt-get install libsdl2-dev
 ```
 
-Or SDL3?
-
+### uvgRTP 
 
 Install crypto support:
 
@@ -108,6 +92,49 @@ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
 Verify installation:
 ```bash
 pkg-config --modversion libuvgrtp  # Should print version number
+```
+
+### Google Test
+
+For the tests to work, you'll need to install Google Test:
+
+```bash
+sudo apt-get install libgtest-dev
+```
+
+### ROS2 
+
+Install ROS2 dependencies for audio fails, because it is not yet available. We need to build audio_common_msgs from source.
+<!-- ```bash
+sudo apt-get install ros-jazzy-audio-common-msgs
+``` -->
+1. First, get the audio_common_msgs source in your workspace:
+```bash
+cd ~/ros2_ws/src
+git clone https://github.com/ros-drivers/audio_common.git -b ros2
+```
+
+2. Since audio_common is a meta-package, we only need audio_common_msgs. We can create a more focused link:
+```bash
+cd ~/ros2_ws/src
+mkdir -p audio_common_msgs
+cp -r audio_common/audio_common_msgs/* audio_common_msgs/
+rm -rf audio_common  # Remove the full repo since we copied what we need
+```
+
+
+### Mosquitto
+
+Install Mosquitto MQTT Broker and clients
+
+```bash
+sudo apt install -y mosquitto mosquitto-clients
+```
+
+Install Mosquitto dependencies
+
+```bash
+sudo apt-get install libmosquitto-dev pkg-config
 ```
 
 
