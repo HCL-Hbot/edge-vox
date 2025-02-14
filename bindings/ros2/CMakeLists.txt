@@ -24,7 +24,39 @@ endif()
 
 message(STATUS "Using EdgeVox root: ${EDGEVOX_ROOT}")
 
-# Rest of your CMake file...
+# include(FetchContent)
+# FetchContent_Declare(
+#     audio_common_rel_package
+#     URL https://github.com/ros-drivers/audio_common.git
+#     SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/external/audio_common
+# )
+# FetchContent_MakeAvailable(audio_common_rel_package)
+
+
+# Can we make this stuff some sort of external package?like with tensorflow?
+# We need to build audio_common_msgs from source.
+# <!-- ```bash
+# sudo apt-get install ros-jazzy-audio-common-msgs
+# ``` -->
+# 1. First, get the audio_common_msgs source in your workspace:
+# ```bash
+# cd ~/ros2_ws/src
+# git clone https://github.com/ros-drivers/audio_common.git -b ros2
+# ```
+
+# 2. Since audio_common is a meta-package, we only need audio_common_msgs. We can create a more focused link:
+# ```bash
+# cd ~/ros2_ws/src
+# mkdir -p audio_common_msgs
+# cp -r audio_common/audio_common_msgs/* audio_common_msgs/
+# rm -rf audio_common  # Remove the full repo since we copied what we need
+# ```
+
+
+
+
+
+
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)

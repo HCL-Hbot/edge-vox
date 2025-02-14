@@ -218,8 +218,9 @@ void remove_wakeword(std::filesystem::path model_path);
 */
 void Lowwi::run(const std::vector<float> &audio_samples);
 }
-``` -->
+```
 The comments above the functions describe fairly well what each function does. Here some additional notes;
+ -->
 
 ## CMake integration
 This project uses CMake for generating the build files. The CMakeLists is configured as follows:
@@ -269,3 +270,8 @@ TODO
 
     target_link_libraries(YOUR_MAIN_EXECUTABLE_NAME CLFML::Lowwi)
     ``` -->
+
+
+## ROS2 integration
+
+This project uses CMake for generating the build files. The CMakeLists is configured as follows:
