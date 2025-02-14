@@ -1,0 +1,56 @@
+classDiagram
+    class AudioCaptureNode {
+        +publish(audio_raw)
+        -captureAudio()
+    }
+    
+    class VADNode {
+        +subscribe(audio_raw)
+        +publish(voice_detected)
+        -detectVoiceActivity()
+    }
+    
+    class WakeWordNode {
+        +subscribe(audio_raw)
+        +subscribe(voice_detected)
+        +publish(wake_word_detected)
+        -detectWakeWord()
+    }
+    
+    class ConversationManagerNode {
+        +subscribe(audio_raw)
+        +subscribe(wake_word_detected)
+        +subscribe(voice_detected)
+        +publish(speech_to_transcribe)
+        +publish(conversation_state)
+        -manageSpeechFlow()
+        -filterSystemSpeech()
+        -trackConversationState()
+    }
+
+    class TranscriptionNode {
+        +subscribe(audio_raw)
+        +subscribe(speech_to_transcribe)
+        +subscribe(conversation_state)
+        +publish(transcription)
+        -transcribeAudio()
+    }
+
+    AudioCaptureNode ..> VADNode : audio_raw
+    AudioCaptureNode ..> WakeWordNode : audio_raw
+    AudioCaptureNode ..> ConversationManagerNode : audio_raw
+    AudioCaptureNode ..> TranscriptionNode : audio_raw
+    
+    VADNode ..> WakeWordNode : voice_detected
+    VADNode ..> ConversationManagerNode : voice_detected
+    
+    WakeWordNode ..> ConversationManagerNode : wake_word_detected
+    
+    ConversationManagerNode ..> TranscriptionNode : speech_to_transcribe
+    ConversationManagerNode ..> TranscriptionNode : conversation_state
+
+    note for AudioCaptureNode "Handles microphone input\nand audio preprocessing"
+    note for VADNode "Performs Voice Activity\nDetection on audio stream"
+    note for WakeWordNode "Detects wake word\nin voice segments"
+    note for ConversationManagerNode "Manages conversation flow\nFilters system speech\nControls transcription timing"
+    note for TranscriptionNode "Transcribes filtered speech\nusing Whisper when appropriate"
